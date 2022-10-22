@@ -1,0 +1,79 @@
+{
+    "architecture": {
+        "name": "LeNet",
+        "args": {
+
+        }
+    },
+    "dataloader": {
+        "name": "MNISTDataLoader",
+        "args": {
+            "root": "data/MNIST",
+            "train": true,
+            "transform": true,
+            "download": true,
+            "batch_size": 64,
+            "val_split": 0.3,
+            "shuffle": false,
+            "sampler": null,
+            "batch_sampler": null,
+            "num_workers": 2, 
+            "collate_fn": null,
+            "pin_memory": false,
+            "drop_last": false, 
+            "timeout": 0,
+            "worker_init_fn": null,
+            "prefetch_factor": 2,
+            "persistent_workers": false
+        }
+    },
+    "optimizer": {
+        "name": "Adam",
+        "args": {
+            "lr": 0.001,
+            "betas": [
+                0.9, 0.999
+            ],
+            "eps": 1e-08,
+            "weight_decay": 0,
+            "amsgrad": false,
+            "foreach": null, 
+            "maximize": false, 
+            "capturable": false
+        }
+    },
+    "loss": {
+        "name": "CrossEntropy",
+        "args": {
+            "weight": null,
+            "size_average": null,
+            "ignore_index": -100,
+            "reduce": null,
+            "reduction": "mean",
+            "label_smoothing": 0.0
+        }
+    },
+    "metrics": [
+        "accuracy", "top_k_acc"
+    ],
+    "training": {
+        "seed": 2022,
+        "epochs": 5
+    },
+    "checkpoint": {
+        "enable": true,
+        "save_dir": "saved/checkpoint",
+        "frequency": 1
+    },
+    "ray": false,
+    "tensorboard": {
+        "enable": true,
+        "experiment_dir": "saved/log/experiment",
+        "run_dir": "saved/log/experiment/run1"
+    },
+    "slack": {
+        "channel_name": "딥러닝-학습",
+        "query": "pytorch-template",
+        "token": "xoxb-4248692324998-4257791377796-2GULN4Yd0InokomWyJyu7Jp5"
+    }
+}

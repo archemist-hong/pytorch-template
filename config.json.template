@@ -5,15 +5,36 @@
 
         }
     },
-    "dataloader": {
+    "traindataset":{
+        "name": "TrainDataset",
+        "args": {
+            "root": "/opt/ml/input/data/train/images",
+            "transform": true
+        }
+    },
+    "traindataloader": {
+        "name": "TrainDataLoader",
+        "args": {
+            "batch_size": 64,
+            "shuffle": false,
+            "sampler": null,
+            "batch_sampler": null,
+            "num_workers": 2, 
+            "collate_fn": null,
+            "pin_memory": false,
+            "drop_last": false, 
+            "timeout": 0,
+            "worker_init_fn": null,
+            "prefetch_factor": 2,
+            "persistent_workers": false
+        }
+    },
+    "validdataloader": {
         "name": "MNISTDataLoader",
         "args": {
-            "root": "data/MNIST",
-            "train": true,
+            "root": "/opt/ml/input/data/eval/images",
             "transform": true,
-            "download": true,
             "batch_size": 64,
-            "val_split": 0.3,
             "shuffle": false,
             "sampler": null,
             "batch_sampler": null,
@@ -74,6 +95,6 @@
     "slack": {
         "channel_name": "딥러닝-학습",
         "query": "pytorch-template",
-        "token": "xoxb-4248692324998-4257791377796-2GULN4Yd0InokomWyJyu7Jp5"
+        "token": "user-slack-token"
     }
 }

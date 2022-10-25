@@ -1,17 +1,28 @@
 from utils.json_parser import parse_json # json package import
 from importlib import import_module # dynamically create instance
-from dataloader.augmentation import transform
 
 # config parsing
 config = parse_json("config.json")
 
-# create dataset
+# import modules
 dataset_module = import_module('dataloader.dataset')
+augmentation_module = import_module('dataloader.augmentation')
+
+# create dataset
 TrainDataset = getattr(dataset_module, config.get('traindataset').get('name'))
+train_transform = getattr(augmentation_module, config.get('traindataset').get('args')['transform'])
 train_dataset = TrainDataset(
     root = config.get('traindataset').get('args')['root'],
-    transform = transform if config.get('traindataset').get('args')['transform'] else None
+    transform = train_transform
 )
-print(len(train_dataset))
-print(train_dataset[1])
+
+TestDataset = getattr(dataset_module, config.get('testdataset').get('name'))
+test_transform = getattr(augmentation_module, config.get('testdataset').get('args')['transform'])
+test_dataset = TestDataset(
+    root = config.get('testdataset').get('args')['root'],
+    transform = test_transform
+)
+
+# create dataloader
+
 

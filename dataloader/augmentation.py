@@ -1,6 +1,9 @@
 import torchvision.transforms as transforms
 
-# variable name must be "transform"
-transform = transforms.Compose([
+train_transform = transforms.Compose([
+    transforms.ToTensor()
+])
+
+test_transform = transforms.Compose([
     transforms.ToTensor()
 ])

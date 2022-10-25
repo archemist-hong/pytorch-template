@@ -13,6 +13,7 @@ dataset_module = import_module('dataloader.dataset')
 augmentation_module = import_module('dataloader.augmentation')
 model_module = import_module('model.model')
 loss_module = import_module('model.loss')
+optimizer_module = import_module('model.optimizer')
 
 # set device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -84,6 +85,9 @@ loss_function = getattr(loss_module, config.get('loss').get('name'))
 loss_fn = loss_function()
 
 # define optimizer
+optimizer_function = getattr(optimizer_module, config.get('optimizer').get('name'))
+optimizer = optimizer_function(model.parameters())
+print(optimizer)
 
 
 

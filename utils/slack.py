@@ -46,7 +46,7 @@ class SlackAPI:
         # chat_postMessage() 메서드 호출
         result = self.client.chat_postMessage(
             channel=channel_id,
-            text = "학습시작!",
+            text = "학습 중!",
             thread_ts = message_ts,
             blocks=[
                 {
@@ -84,4 +84,26 @@ def get_init_message(device, batch_size, val_ratio, num_workers, model, optimize
     • NUM_EPOCH = {num_epoch}
     • LOSS = {loss_fn.__repr__()}
     """
+    return message
+
+def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_acc, epoch_gender_acc, epoch_age_acc):
+    message = f"""
+    • phase: `{phase}`
+    • 현재 epoch: {epoch}
+    • 평균 Loss: {epoch_loss:.5f}
+    • 평균 Accuracy(mask)   : {epoch_mask_acc:.5f}
+    • 평균 Accuracy(gender) : {epoch_gender_acc:.5f}
+    • 평균 Accuracy(age)    : {epoch_age_acc:.5f}
+    """
+    return message
+
+def get_final_message(best_val_accuracy, best_val_loss):
+    message = f'''
+    `모델 학습 종료!` 
+    • 종료 시각: {datetime.datetime.now(gettz('Asia/Seoul')).strftime("%Y/%m/%d, %H:%M:%S")}
+    `최고 accuracy`
+    • {best_val_accuracy:.5f}
+    `최저 loss`
+    • {best_val_loss:.5f}
+    '''
     return message

@@ -1,52 +1,52 @@
 {
     "architecture": {
-        "name": "LeNet",
+        "name": "MyResNet18",
         "args": {
-
+            "show_summary": false
         }
     },
     "traindataset":{
         "name": "TrainDataset",
         "args": {
-            "root": "/opt/ml/input/data/train/images",
-            "transform": true
+            "root": "/opt/ml/input/data/train",
+            "transform": "train_transform",
+            "val_ratio": 0.2
         }
     },
     "traindataloader": {
-        "name": "TrainDataLoader",
+        "batch_size": 64,
+        "shuffle": false,
+        "sampler": null,
+        "batch_sampler": null,
+        "num_workers": 2, 
+        "collate_fn": null,
+        "pin_memory": false,
+        "drop_last": false, 
+        "timeout": 0,
+        "worker_init_fn": null,
+        "prefetch_factor": 2,
+        "persistent_workers": false
+    },
+    "testdataset":{
+        "name": "TestDataset",
         "args": {
-            "batch_size": 64,
-            "shuffle": false,
-            "sampler": null,
-            "batch_sampler": null,
-            "num_workers": 2, 
-            "collate_fn": null,
-            "pin_memory": false,
-            "drop_last": false, 
-            "timeout": 0,
-            "worker_init_fn": null,
-            "prefetch_factor": 2,
-            "persistent_workers": false
+            "root": "/opt/ml/input/data/eval",
+            "transform": "test_transform"
         }
     },
-    "validdataloader": {
-        "name": "MNISTDataLoader",
-        "args": {
-            "root": "/opt/ml/input/data/eval/images",
-            "transform": true,
-            "batch_size": 64,
-            "shuffle": false,
-            "sampler": null,
-            "batch_sampler": null,
-            "num_workers": 2, 
-            "collate_fn": null,
-            "pin_memory": false,
-            "drop_last": false, 
-            "timeout": 0,
-            "worker_init_fn": null,
-            "prefetch_factor": 2,
-            "persistent_workers": false
-        }
+    "testdataloader": {
+        "batch_size": 64,
+        "shuffle": false,
+        "sampler": null,
+        "batch_sampler": null,
+        "num_workers": 2, 
+        "collate_fn": null,
+        "pin_memory": false,
+        "drop_last": false, 
+        "timeout": 0,
+        "worker_init_fn": null,
+        "prefetch_factor": 2,
+        "persistent_workers": false
     },
     "optimizer": {
         "name": "Adam",
@@ -93,7 +93,8 @@
         "run_dir": "saved/log/experiment/run1"
     },
     "slack": {
-        "channel_name": "딥러닝-학습",
+        "enable": true,
+        "channel_name": "training",
         "query": "pytorch-template",
         "token": "user-slack-token"
     }

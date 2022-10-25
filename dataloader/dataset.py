@@ -46,7 +46,7 @@ class TrainDataset(Dataset):
         gender_one_hot = F.one_hot(torch.tensor(self.gender_classes[gender]), len(self.gender_classes))
         age = (2 if int(age) >= 60 else (1 if int(age)>= 30 else 0)) # >=60:2, >=30:1, <30:0
         age_one_hot = F.one_hot(torch.tensor(age), len(self.age_classes))
-        return mask_one_hot, gender_one_hot, age_one_hot
+        return torch.cat((mask_one_hot, gender_one_hot, age_one_hot), dim = 0)
 
 class TestDataset(Dataset):
     def __init__(self, root, transform):

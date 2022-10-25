@@ -1,6 +1,9 @@
 from utils.json_parser import parse_json # json package import
 from importlib import import_module # dynamically create instance
+import torch
 from torch.utils.data import DataLoader
+from torchsummary import summary
+
 
 # config parsing
 config = parse_json("config.json")
@@ -8,6 +11,11 @@ config = parse_json("config.json")
 # import modules
 dataset_module = import_module('dataloader.dataset')
 augmentation_module = import_module('dataloader.augmentation')
+model_module = import_module('model.model')
+loss_module = import_module('model.loss')
+
+# set device
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # create dataset
 TrainDataset = getattr(dataset_module, config.get('traindataset').get('name'))
@@ -30,7 +38,7 @@ dataset = {
 }
 
 # create dataloader
-train_dataloader_config = config.get('traindataloader').get('args')
+train_dataloader_config = config.get('traindataloader')
 train_dataloader = DataLoader(
     dataset = dataset['train'],
     batch_size = train_dataloader_config['batch_size'],
@@ -47,7 +55,7 @@ train_dataloader = DataLoader(
     persistent_workers = train_dataloader_config['persistent_workers']
     )
 
-test_dataloader_config = config.get('testdataloader').get('args')
+test_dataloader_config = config.get('testdataloader')
 test_dataloader = DataLoader(
     dataset = dataset['test'],
     batch_size = test_dataloader_config['batch_size'],
@@ -63,4 +71,20 @@ test_dataloader = DataLoader(
     prefetch_factor = test_dataloader_config['prefetch_factor'],
     persistent_workers = test_dataloader_config['persistent_workers']
     )
+
+# create model
+Architecture = getattr(model_module, config.get('architecture').get('name'))
+model = Architecture().to(device)
+if config.get('architecture').get('args')['show_summary']:
+    img, label = train_dataset[0]
+    summary(model, img.shape)
+
+# define loss
+loss_function = getattr(loss_module, config.get('loss').get('name'))
+loss_fn = loss_function()
+
+# define optimizer
+
+
+
 

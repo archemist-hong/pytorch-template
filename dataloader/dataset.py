@@ -29,24 +29,23 @@ class TrainDataset(Dataset):
         train_path = Path(root) / "images"
         train_info = pd.read_csv(train_path.parent/'train.csv')
         self.paths = [f for path in train_info['path'] for f in (train_path / path).iterdir() if f.stem[0] != '.'] # get paths of image files except hidden files
+        self.labels = [self.get_labels(path) for path in self.paths]
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, index):
         image = PIL.Image.open(self.paths[index])
-        labels = self.get_labels(self.paths[index])
+        labels = self.labels[index]
         if self.transform:
             image = self.transform(image)
         return image, labels
 
     def get_labels(self, path):
-        mask_one_hot = F.one_hot(torch.tensor(self.mask_classes[path.stem]), 3)
+        mask = self.mask_classes[path.stem]
         id_, gender, race, age = path.parent.stem.split('_')
-        gender_one_hot = F.one_hot(torch.tensor(self.gender_classes[gender]), len(self.gender_classes))
         age = (2 if int(age) >= 60 else (1 if int(age)>= 30 else 0)) # >=60:2, >=30:1, <30:0
-        age_one_hot = F.one_hot(torch.tensor(age), len(self.age_classes))
-        return torch.cat((mask_one_hot, gender_one_hot, age_one_hot), dim = 0)
+        return mask*6 + self.gender_classes[gender]*3 + age
 
 class TestDataset(Dataset):
     def __init__(self, root, transform):

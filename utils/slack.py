@@ -86,14 +86,15 @@ def get_init_message(device, batch_size, val_ratio, num_workers, model, optimize
     """
     return message
 
-def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_acc, epoch_gender_acc, epoch_age_acc):
+def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, epoch_age_f1, epoch_final_f1):
     message = f"""
     • phase: `{phase}`
     • 현재 epoch: {epoch}
     • 평균 Loss: {epoch_loss:.5f}
-    • 평균 Accuracy(mask)   : {epoch_mask_acc:.5f}
-    • 평균 Accuracy(gender) : {epoch_gender_acc:.5f}
-    • 평균 Accuracy(age)    : {epoch_age_acc:.5f}
+    • 평균 F1-score(mask)   : {epoch_mask_f1:.5f}
+    • 평균 F1-score(gender)   : {epoch_gender_f1:.5f}
+    • 평균 F1-score(age)   : {epoch_age_f1:.5f}
+    • 평균 F1-score(total)   : {epoch_final_f1:.5f}
     """
     return message
 

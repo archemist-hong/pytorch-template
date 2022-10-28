@@ -2,6 +2,7 @@ from utils.json_parser import parse_json # json package import
 from importlib import import_module # dynamically create instance
 from utils.slack import *
 from utils.utils import *
+from logger.tensorboard import *
 
 import torch
 from torch.utils.data import DataLoader
@@ -157,6 +158,7 @@ if config.get('tensorboard'):
     writer = SummaryWriter(config.get('training')['experiment_path'])
 
 # train
+scaler = torch.cuda.amp.GradScaler()
 print('Start Training ...')
 for epoch in range(int(config.get('training')['epochs'])):
     for phase in ["train", "valid"]:
@@ -180,18 +182,21 @@ for epoch in range(int(config.get('training')['epochs'])):
 
                 optimizer.zero_grad() # initialize optimizer
                 with torch.set_grad_enabled(phase == "train"): # 연산량 최소화
-                    mask_logits, gender_logits, age_logits = model(images)
-                    mask_labels, gender_labels, age_labels = split_labels(labels)
-                    loss = loss_fn(mask_logits, F.one_hot(mask_labels, 3).float()) + \
-                           loss_fn(gender_logits, F.one_hot(gender_labels, 2).float()) + \
-                           loss_fn(age_logits, F.one_hot(age_labels, 3).float())
+                    # Casts operations to mixed precision
+                    with torch.cuda.amp.autocast():
+                        mask_logits, gender_logits, age_logits = model(images)
+                        mask_labels, gender_labels, age_labels = split_labels(labels)
+                        loss = loss_fn(mask_logits, F.one_hot(mask_labels, 3).float()) + \
+                            loss_fn(gender_logits, F.one_hot(gender_labels, 2).float()) + \
+                            loss_fn(age_logits, F.one_hot(age_labels, 3).float())
                     _, mask_preds = torch.max(mask_logits, 1)
                     _, gender_preds = torch.max(gender_logits, 1)
                     _, age_preds = torch.max(age_logits, 1) 
 
                     if phase == "train":
-                        loss.backward() # gradient 계산
-                        optimizer.step() # 모델 업데이트
+                        scaler.scale(loss).backward() # gradient 계산
+                        scaler.step(optimizer) # 모델 업데이트
+                        scaler.update()
 
                 running_loss += loss.item() * images.size(0) # 한 Batch에서의 loss 값 누적
                 mask_preds_list.append(mask_preds)
@@ -270,6 +275,7 @@ age_labels_list = []
 with tqdm(valid_dataloader, unit="batch") as tepoch:
     for ind, (images, labels) in enumerate(tepoch):
         images = images.to(device)
+        labels = labels.to(device)
 
         with torch.set_grad_enabled(False): # 연산량 최소화
             mask_logits, gender_logits, age_logits = model(images)
@@ -277,6 +283,13 @@ with tqdm(valid_dataloader, unit="batch") as tepoch:
             _, mask_preds = torch.max(mask_logits, 1)
             _, gender_preds = torch.max(gender_logits, 1)
             _, age_preds = torch.max(age_logits, 1) 
+
+        if config.get('tensorboard'):
+            final_preds = mask_preds*6 + gender_preds*3 + age_preds
+            wrong_idx = torch.where(final_preds != labels, True, False)
+            writer.add_figure('predictions vs. actuals',
+                                plot_classes_preds(images[wrong_idx], final_preds[wrong_idx], labels[wrong_idx]),
+                                epoch)
 
         mask_preds_list.append(mask_preds)
         mask_labels_list.append(mask_labels)

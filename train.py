@@ -271,6 +271,7 @@ gender_preds_list = []
 gender_labels_list = []
 age_preds_list = []
 age_labels_list = []
+images_list = []
 
 with tqdm(valid_dataloader, unit="batch") as tepoch:
     for ind, (images, labels) in enumerate(tepoch):
@@ -287,9 +288,7 @@ with tqdm(valid_dataloader, unit="batch") as tepoch:
         if config.get('tensorboard'):
             final_preds = mask_preds*6 + gender_preds*3 + age_preds
             wrong_idx = torch.where(final_preds != labels, True, False)
-            writer.add_figure('predictions vs. actuals',
-                                plot_classes_preds(images[wrong_idx], final_preds[wrong_idx], labels[wrong_idx]),
-                                epoch)
+            images_list.append(images[wrong_idx])
 
         mask_preds_list.append(mask_preds)
         mask_labels_list.append(mask_labels)
@@ -308,6 +307,13 @@ epoch_age_labels = torch.cat(age_labels_list).to(device)
 # mask data에만
 epoch_final_pred = epoch_mask_pred*6 + epoch_gender_pred*3 + epoch_age_pred
 epoch_final_labels = epoch_mask_labels*6 + epoch_gender_labels*3 + epoch_age_labels
+
+wrong_idx = torch.where(epoch_final_pred != epoch_final_labels, True, False)
+images_list = [image for image in images_list if image.shape[0] != 0]
+if config.get('tensorboard'):
+    writer.add_figure('predictions vs. actuals',
+                        plot_classes_preds(torch.cat(images_list, dim = 0), epoch_final_pred[wrong_idx], epoch_final_labels[wrong_idx]),
+                        epoch)
 
 mask_cm = ConfusionMatrix(3)
 gender_cm = ConfusionMatrix(2)

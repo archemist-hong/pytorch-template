@@ -118,7 +118,9 @@ if config.get('architecture').get('args')['show_summary']:
 # define loss
 print('Defining Loss ...')
 loss_function = getattr(loss_module, config.get('loss').get('name'))
-loss_fn = loss_function()
+loss_function_ce = getattr(loss_module, 'CrossEntropy')
+loss_fn = loss_function(label_smoothing = 0.1)
+loss_fn_ce = loss_function_ce()
 
 # define optimizer
 print('Defining Optimizer ...')
@@ -187,8 +189,8 @@ for epoch in range(int(config.get('training')['epochs'])):
                         mask_logits, gender_logits, age_logits = model(images)
                         mask_labels, gender_labels, age_labels = split_labels(labels)
                         loss = loss_fn(mask_logits, F.one_hot(mask_labels, 3).float()) + \
-                            loss_fn(gender_logits, F.one_hot(gender_labels, 2).float()) + \
-                            loss_fn(age_logits, F.one_hot(age_labels, 3).float())
+                            loss_fn_ce(gender_logits, F.one_hot(gender_labels, 2).float()) + \
+                            1.5 * loss_fn_ce(age_logits, F.one_hot(age_labels, 3).float())
                     _, mask_preds = torch.max(mask_logits, 1)
                     _, gender_preds = torch.max(gender_logits, 1)
                     _, age_preds = torch.max(age_logits, 1) 
@@ -221,7 +223,7 @@ for epoch in range(int(config.get('training')['epochs'])):
         epoch_age_f1 = age_metric(epoch_age_pred, epoch_age_label)
         epoch_final_pred = epoch_mask_pred*6 + epoch_gender_pred*3 + epoch_age_pred
         epoch_final_label = epoch_mask_label*6 + epoch_gender_label*3 + epoch_age_label
-        epoch_final_f1 = final_metric(epoch_mask_pred, epoch_mask_label)
+        epoch_final_f1 = final_metric(epoch_final_pred, epoch_final_label)
 
         if config.get('tensorboard'):
             # ...log the running loss

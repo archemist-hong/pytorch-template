@@ -1,6 +1,7 @@
 config.json
 Untitled.ipynb
 saved/
+find_wrong_labels.ipynb
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,visualstudiocode,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,visualstudiocode,python

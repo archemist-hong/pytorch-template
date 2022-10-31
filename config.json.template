@@ -18,7 +18,7 @@
         "shuffle": false,
         "sampler": null,
         "batch_sampler": null,
-        "num_workers": 2, 
+        "num_workers": 8, 
         "collate_fn": null,
         "pin_memory": false,
         "drop_last": false, 
@@ -39,7 +39,7 @@
         "shuffle": false,
         "sampler": null,
         "batch_sampler": null,
-        "num_workers": 2, 
+        "num_workers": 8, 
         "collate_fn": null,
         "pin_memory": false,
         "drop_last": false, 
@@ -64,38 +64,38 @@
         }
     },
     "loss": {
-        "name": "CrossEntropy",
+        "name": "FocalLoss",
         "args": {
             "weight": null,
             "size_average": null,
             "ignore_index": -100,
             "reduce": null,
             "reduction": "mean",
-            "label_smoothing": 0.0
+            "label_smoothing": 0.1
         }
     },
-    "metrics": [
-        "accuracy", "top_k_acc"
-    ],
+    "metrics": {
+        "name": "get_f1score"
+    },
     "training": {
         "seed": 2022,
-        "epochs": 5
+        "epochs": 200,
+        "experiment_path": "saved/experiment/ResNet18withFL_Variant"
     },
     "checkpoint": {
         "enable": true,
-        "save_dir": "saved/checkpoint",
-        "frequency": 1
+        "frequency": 2
+    },
+    "inference": {
+        "seed": 2022,
+        "checkpoint_path": "checkpoint_model_36_0.641_1.000.pt"
     },
     "ray": false,
-    "tensorboard": {
-        "enable": true,
-        "experiment_dir": "saved/log/experiment",
-        "run_dir": "saved/log/experiment/run1"
-    },
+    "tensorboard": true,
     "slack": {
         "enable": true,
         "channel_name": "training",
-        "query": "pytorch-template",
-        "token": "user-slack-token"
+        "query": "ResNet18withFL(mask)_CE(gender)_1.5CE(age)",
+        "token": "xoxb-4248692324998-4257791377796-XBeACdJ3rsZKmJ31vXYZAtBw"
     }
 }

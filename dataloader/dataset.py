@@ -13,6 +13,7 @@ class TrainDataset(Dataset):
             "mask3": 0,
             "mask4": 0,
             "mask5": 0,
+            "mask6": 0,
             "incorrect_mask": 1,
             "normal": 2
         } # wear:0, incorrect:1, not wear:2

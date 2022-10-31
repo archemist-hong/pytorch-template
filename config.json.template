@@ -96,6 +96,6 @@
         "enable": true,
         "channel_name": "training",
         "query": "ResNet18withFL(mask)_CE(gender)_1.5CE(age)",
-        "token": "xoxb-4248692324998-4257791377796-XBeACdJ3rsZKmJ31vXYZAtBw"
+        "token": "user-slack-token"
     }
 }

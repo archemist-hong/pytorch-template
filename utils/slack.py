@@ -86,7 +86,7 @@ def get_init_message(device, batch_size, val_ratio, num_workers, model, optimize
     """
     return message
 
-def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, epoch_age_f1, epoch_final_f1):
+def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, epoch_age_f1, epoch_final_f1, epoch_final_precision, epoch_final_recall, epoch_final_accuracy):
     message = f"""
     • phase: `{phase}`
     • 현재 epoch: {epoch}
@@ -95,16 +95,15 @@ def get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, 
     • 평균 F1-score(gender)   : {epoch_gender_f1:.5f}
     • 평균 F1-score(age)   : {epoch_age_f1:.5f}
     • 평균 F1-score(total)   : {epoch_final_f1:.5f}
+    • 평균 Precision(total)   : {epoch_final_precision:.5f}
+    • 평균 Recall(total)   : {epoch_final_recall:.5f}
+    • 평균 Accuracy(total)   : {epoch_final_accuracy:.5f}
     """
     return message
 
-def get_final_message(best_val_accuracy, best_val_loss):
+def get_final_message():
     message = f'''
     `모델 학습 종료!` 
     • 종료 시각: {datetime.datetime.now(gettz('Asia/Seoul')).strftime("%Y/%m/%d, %H:%M:%S")}
-    `최고 accuracy`
-    • {best_val_accuracy:.5f}
-    `최저 loss`
-    • {best_val_loss:.5f}
     '''
     return message

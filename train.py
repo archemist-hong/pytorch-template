@@ -7,6 +7,7 @@ from logger.tensorboard import *
 import torch
 from torch.utils.data import DataLoader
 from torchsummary import summary
+from torchmetrics.functional import precision_recall, accuracy
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.model_selection import train_test_split
 import torch.nn.functional as F
@@ -118,12 +119,18 @@ if config.get('architecture').get('args')['show_summary']:
 # define loss
 print('Defining Loss ...')
 loss_function = getattr(loss_module, config.get('loss').get('name'))
-loss_fn = loss_function(label_smoothing = 0.1)
+loss_fn = loss_function(
+    alpha = config.get('loss').get('args')['alpha'],
+    gamma = config.get('loss').get('args')['gamma'],
+    label_smoothing = config.get('loss').get('args')['label_smoothing']
+    )
+loss_fn2 = torch.nn.CrossEntropyLoss(label_smoothing = config.get('loss').get('args')['label_smoothing'])
 
 # define optimizer
 print('Defining Optimizer ...')
 optimizer_function = getattr(optimizer_module, config.get('optimizer').get('name'))
 optimizer = optimizer_function(model.parameters())
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = 100)
 
 # define metrics
 print('Defining Metrics ...')
@@ -158,6 +165,7 @@ if config.get('tensorboard'):
     writer = SummaryWriter(config.get('training')['experiment_path'])
 
 # train
+best_loss = 999
 scaler = torch.cuda.amp.GradScaler()
 print('Start Training ...')
 for epoch in range(int(config.get('training')['epochs'])):
@@ -186,9 +194,9 @@ for epoch in range(int(config.get('training')['epochs'])):
                     with torch.cuda.amp.autocast():
                         mask_logits, gender_logits, age_logits = model(images)
                         mask_labels, gender_labels, age_labels = split_labels(labels)
-                        loss = loss_fn(mask_logits, F.one_hot(mask_labels, 3).float()) + \
-                            loss_fn(gender_logits, F.one_hot(gender_labels, 2).float()) + \
-                            loss_fn(age_logits, F.one_hot(age_labels, 3).float())
+                        loss = 100 * loss_fn(mask_logits, F.one_hot(mask_labels, 3).float()) + \
+                            loss_fn2(gender_logits, F.one_hot(gender_labels, 2).float()) + \
+                            100 * loss_fn(age_logits, F.one_hot(age_labels, 3).float())
                     _, mask_preds = torch.max(mask_logits, 1)
                     _, gender_preds = torch.max(gender_logits, 1)
                     _, age_preds = torch.max(age_logits, 1) 
@@ -197,6 +205,7 @@ for epoch in range(int(config.get('training')['epochs'])):
                         scaler.scale(loss).backward() # gradient 계산
                         scaler.step(optimizer) # 모델 업데이트
                         scaler.update()
+                        scheduler.step()
 
                 running_loss += loss.item() * images.size(0) # 한 Batch에서의 loss 값 누적
                 mask_preds_list.append(mask_preds)
@@ -222,6 +231,8 @@ for epoch in range(int(config.get('training')['epochs'])):
         epoch_final_pred = epoch_mask_pred*6 + epoch_gender_pred*3 + epoch_age_pred
         epoch_final_label = epoch_mask_label*6 + epoch_gender_label*3 + epoch_age_label
         epoch_final_f1 = final_metric(epoch_final_pred, epoch_final_label)
+        epoch_final_precision, epoch_final_recall = precision_recall(epoch_final_pred, epoch_final_label, average='macro', num_classes=18)
+        epoch_final_accuracy = accuracy(epoch_final_pred, epoch_final_label)
 
         if config.get('tensorboard'):
             # ...log the running loss
@@ -242,21 +253,23 @@ for epoch in range(int(config.get('training')['epochs'])):
                             epoch_final_f1,
                             epoch)
         # save checkpoint
-        if (phase == "train") and (epoch % config.get('checkpoint')['frequency'] == 0):
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'loss': epoch_loss
-                },
-                os.path.join(config.get('training')['experiment_path'], 'checkpoint', f"checkpoint_model_{epoch}_{epoch_loss:.3f}_{epoch_final_f1:.3f}.pt"))
+        if (phase == "valid"):
+            if epoch_loss < best_loss:
+                best_loss = epoch_loss
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': epoch_loss
+                    },
+                    os.path.join(config.get('training')['experiment_path'], 'checkpoint', f"checkpoint_model_{epoch}_{epoch_loss:.3f}_{epoch_final_f1:.3f}.pt"))
         if slack_enable:
-            epoch_message = get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, epoch_age_f1, epoch_final_f1)
+            epoch_message = get_epoch_message(phase, epoch, epoch_loss, epoch_mask_f1, epoch_gender_f1, epoch_age_f1, epoch_final_f1, epoch_final_precision, epoch_final_recall, epoch_final_accuracy)
             slack.post_thread_message(channel_id, message_ts, epoch_message)
 
-#if slack_enable:
-    #final_message = get_final_message()
-    #slack.post_thread_message(channel_id, message_ts, final_message)
+if slack_enable:
+    final_message = get_final_message()
+    slack.post_thread_message(channel_id, message_ts, final_message)
 
 #if slack_enable:
 #    error_message = f"`오류` 오류가 발생했습니다!: {e}"

@@ -1,16 +1,17 @@
 from pathlib import Path
 import shutil
 
-def check_directories(experiment_path):
+def check_directories(experiment_path, config_check = True):
     path = Path(experiment_path)
     if not path.exists():
         path.mkdir()
     if not (path/'checkpoint').exists():
         (path/'checkpoint').mkdir()
-    if (path/'config.json').exists():
-        raise("config file exists!")
-    else:
-        shutil.copy(str(path.parent.parent.parent / 'config.json'), str(path / 'config.json'))
+    if config_check:
+        if (path/'config.json').exists():
+            raise("config file exists!")
+        else:
+            shutil.copy(str(path.parent.parent.parent / 'config.json'), str(path / 'config.json'))
 
 def count_parameters(model, requires_grad):
     return sum(p.numel() for p in model.parameters() if p.requires_grad == requires_grad)

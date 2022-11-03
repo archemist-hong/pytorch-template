@@ -15,13 +15,13 @@
     },
     "traindataloader": {
         "batch_size": 64,
-        "shuffle": false,
+        "shuffle": true,
         "sampler": null,
         "batch_sampler": null,
         "num_workers": 8, 
         "collate_fn": null,
-        "pin_memory": false,
-        "drop_last": false, 
+        "pin_memory": true,
+        "drop_last": true, 
         "timeout": 0,
         "worker_init_fn": null,
         "prefetch_factor": 2,
@@ -31,7 +31,8 @@
         "name": "TestDataset",
         "args": {
             "root": "/opt/ml/input/data/eval",
-            "transform": "test_transform"
+            "transform": "test_transform",
+            "test_time_augmentation": true
         }
     },
     "testdataloader": {
@@ -39,7 +40,7 @@
         "shuffle": false,
         "sampler": null,
         "batch_sampler": null,
-        "num_workers": 8, 
+        "num_workers": 4, 
         "collate_fn": null,
         "pin_memory": false,
         "drop_last": false, 
@@ -49,7 +50,7 @@
         "persistent_workers": false
     },
     "optimizer": {
-        "name": "Adam",
+        "name": "AdamP",
         "args": {
             "lr": 0.001,
             "betas": [
@@ -71,7 +72,9 @@
             "ignore_index": -100,
             "reduce": null,
             "reduction": "mean",
-            "label_smoothing": 0.1
+            "label_smoothing": 0.0,
+            "alpha": 0.1,
+            "gamma": 2
         }
     },
     "metrics": {
@@ -79,8 +82,8 @@
     },
     "training": {
         "seed": 2022,
-        "epochs": 200,
-        "experiment_path": "saved/experiment/ResNet18withFL_Variant"
+        "epochs": 30,
+        "experiment_path": "saved/experiment/Ensemble"
     },
     "checkpoint": {
         "enable": true,
@@ -88,14 +91,14 @@
     },
     "inference": {
         "seed": 2022,
-        "checkpoint_path": "checkpoint_model_36_0.641_1.000.pt"
+        "checkpoint_path": "checkpoint_model_10_0.005_0.966.pt"
     },
     "ray": false,
     "tensorboard": true,
     "slack": {
         "enable": true,
         "channel_name": "training",
-        "query": "ResNet18withFL(mask)_CE(gender)_1.5CE(age)",
+        "query": "Resnet_Ensemble",
         "token": "user-slack-token"
     }
 }
